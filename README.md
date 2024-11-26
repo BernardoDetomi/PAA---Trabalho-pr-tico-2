@@ -26,9 +26,11 @@ Integração com o backtracking:
 Executar os programas...    
 
     gcc -o backtracking backtracking.c  
+    
     gcc -o heuristica heuristica.c  
 
     ./backtracking -i entrada.txt -o saida.txt  
+    
     ./heuristica -i entrada.txt -o saida2.txt  
 
 Para comparar os tempos de execução entre os métodos de backtracking simples e com heurística MRV, podemos fazer algumas modificações no código. A ideia é medir os tempos de execução de cada método separadamente e registrar os resultados para análise.  
@@ -48,8 +50,10 @@ Saída de resultados:
 
 - Registrar os tempos para comparação.  
 
-        gcc -o sudoku sudoku.c  
-        ./sudoku -i entrada.txt -o saida_simples.txt -m 0  
+        gcc -o sudoku sudoku.c
+  
+        ./sudoku -i entrada.txt -o saida_simples.txt -m 0
+  
         ./sudoku -i entrada.txt -o saida_heuristica.txt -m 1  
 
 
@@ -64,5 +68,6 @@ Testar o desempenho com diferentes níveis de dificuldade dos tabuleiros:
 
 - Adicionar suporte para processar múltiplos tabuleiros em sequência, com tempos registrados para cada método e tabuleiro.  
 
-        gcc -o sudokus sudokus.c  
+        gcc -o sudokus sudokus.c
+  
         ./sudokus -d pastasudokus/  
