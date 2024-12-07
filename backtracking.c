@@ -3,22 +3,16 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/time.h>
-#include <sys/resource.h>
 
 #define SIZE 9
 #define EMPTY 'v'
+#define MAX_PUZZLES 100
 
 // Função para verificar se o número é válido na célula
 int is_valid(int grid[SIZE][SIZE], int row, int col, int num) {
-    // Verifica na linha
     for (int x = 0; x < SIZE; x++) {
-        if (grid[row][x] == num) return 0;
+        if (grid[row][x] == num || grid[x][col] == num) return 0;
     }
-    // Verifica na coluna
-    for (int x = 0; x < SIZE; x++) {
-        if (grid[x][col] == num) return 0;
-    }
-    // Verifica na subgrade 3x3
     int start_row = row - row % 3, start_col = col - col % 3;
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
@@ -47,40 +41,64 @@ int solve_sudoku(int grid[SIZE][SIZE]) {
     return 1; // Solução encontrada
 }
 
-// Função para carregar o Sudoku do arquivo
-void load_sudoku(const char *filename, int grid[SIZE][SIZE]) {
+// Função para carregar múltiplos Sudokus do arquivo
+int load_sudokus(const char *filename, int puzzles[MAX_PUZZLES][SIZE][SIZE]) {
     FILE *file = fopen(filename, "r");
     if (!file) {
         perror("Erro ao abrir arquivo de entrada");
         exit(EXIT_FAILURE);
     }
-    for (int i = 0; i < SIZE; i++) {
-        for (int j = 0; j < SIZE; j++) {
-            char ch;
-            fscanf(file, " %c", &ch);
-            grid[i][j] = (ch == EMPTY) ? 0 : ch - '0';
+
+    int puzzle_count = 0;
+    int row = 0;
+    char line[256];
+
+    while (fgets(line, sizeof(line), file)) {
+        // Se linha for vazia, significa troca de puzzle
+        if (strcmp(line, "\n") == 0) {
+            if (row > 0) {
+                puzzle_count++;
+                row = 0;
+            }
+            continue;
         }
+
+        // Parseia a linha para preencher a matriz
+        for (int col = 0, idx = 0; col < SIZE; col++, idx += 2) {
+            puzzles[puzzle_count][row][col] = (line[idx] == EMPTY) ? 0 : line[idx] - '0';
+        }
+        row++;
     }
+
+    // Incrementa o contador para o último puzzle lido
+    if (row > 0) puzzle_count++;
+
     fclose(file);
+    return puzzle_count;
 }
 
-// Função para salvar o Sudoku resolvido no arquivo
-void save_sudoku(const char *filename, int grid[SIZE][SIZE]) {
+// Função para salvar os Sudokus resolvidos no arquivo
+void save_sudokus(const char *filename, int puzzles[MAX_PUZZLES][SIZE][SIZE], int puzzle_count) {
     FILE *file = fopen(filename, "w");
     if (!file) {
         perror("Erro ao abrir arquivo de saída");
         exit(EXIT_FAILURE);
     }
-    for (int i = 0; i < SIZE; i++) {
-        for (int j = 0; j < SIZE; j++) {
-            if (grid[i][j] == 0) {
-                fprintf(file, "%c ", EMPTY);
-            } else {
-                fprintf(file, "%d ", grid[i][j]);
+
+    for (int p = 0; p < puzzle_count; p++) {
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j < SIZE; j++) {
+                if (puzzles[p][i][j] == 0) {
+                    fprintf(file, "%c ", EMPTY);
+                } else {
+                    fprintf(file, "%d ", puzzles[p][i][j]);
+                }
             }
+            fprintf(file, "\n");
         }
-        fprintf(file, "\n");
+        if (p < puzzle_count - 1) fprintf(file, "\n");
     }
+
     fclose(file);
 }
 
@@ -98,7 +116,6 @@ int main(int argc, char *argv[]) {
     char *output_file = NULL;
     int opt;
 
-    // Parse dos argumentos
     while ((opt = getopt(argc, argv, "i:o:")) != -1) {
         switch (opt) {
             case 'i':
@@ -118,25 +135,30 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    int grid[SIZE][SIZE];
+    int puzzles[MAX_PUZZLES][SIZE][SIZE];
     struct timeval start, end;
 
-    // Carrega o Sudoku
-    load_sudoku(input_file, grid);
+    // Carrega múltiplos Sudokus
+    int puzzle_count = load_sudokus(input_file, puzzles);
 
-    // Medir tempo de resolução
-    gettimeofday(&start, NULL);
-    if (!solve_sudoku(grid)) {
-        fprintf(stderr, "Sem solução para o Sudoku fornecido.\n");
-        exit(EXIT_FAILURE);
+    for (int p = 0; p < puzzle_count; p++) {
+        printf("Resolvendo Sudoku #%d...\n", p + 1);
+
+        // Medir tempo de resolução
+        gettimeofday(&start, NULL);
+        if (!solve_sudoku(puzzles[p])) {
+            fprintf(stderr, "Sem solução para o Sudoku #%d.\n", p + 1);
+        }
+        gettimeofday(&end, NULL);
+
+        // Mostrar tempo
+        measure_time(&start, &end);
     }
-    gettimeofday(&end, NULL);
 
-    // Salvar o resultado
-    save_sudoku(output_file, grid);
+    // Salvar os resultados
+    save_sudokus(output_file, puzzles, puzzle_count);
 
-    // Mostrar tempo
-    measure_time(&start, &end);
+    printf("Todos os Sudokus resolvidos e salvos em '%s'.\n", output_file);
 
     return 0;
 }

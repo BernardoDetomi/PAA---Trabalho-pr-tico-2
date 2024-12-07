@@ -56,53 +56,84 @@ Cell find_best_cell(int grid[SIZE][SIZE]) {
 }
 
 // Função de backtracking usando a heurística MRV
-int solve_sudoku_with_heuristic(int grid[SIZE][SIZE]) {
+int heuristic_solve(int grid[SIZE][SIZE]) {
     Cell cell = find_best_cell(grid);
     if (cell.row == -1) return 1; // Sudoku resolvido
 
     for (int num = 1; num <= SIZE; num++) {
         if (is_valid(grid, cell.row, cell.col, num)) {
             grid[cell.row][cell.col] = num;
-            if (solve_sudoku_with_heuristic(grid)) return 1;
+            if (heuristic_solve(grid)) return 1;
             grid[cell.row][cell.col] = 0;
         }
     }
     return 0; // Sem solução
 }
 
-// Função para carregar o Sudoku do arquivo
-void load_sudoku(const char *filename, int grid[SIZE][SIZE]) {
+// Função de backtracking pura
+int backtracking_solve(int grid[SIZE][SIZE]) {
+    for (int row = 0; row < SIZE; row++) {
+        for (int col = 0; col < SIZE; col++) {
+            if (grid[row][col] == 0) {
+                for (int num = 1; num <= SIZE; num++) {
+                    if (is_valid(grid, row, col, num)) {
+                        grid[row][col] = num;
+                        if (backtracking_solve(grid)) return 1;
+                        grid[row][col] = 0;
+                    }
+                }
+                return 0; // Sem solução
+            }
+        }
+    }
+    return 1; // Solução encontrada
+}
+
+// Função para carregar múltiplos Sudokus do arquivo
+int load_multiple_sudokus(const char *filename, int puzzles[][SIZE][SIZE]) {
     FILE *file = fopen(filename, "r");
     if (!file) {
         perror("Erro ao abrir arquivo de entrada");
         exit(EXIT_FAILURE);
     }
-    for (int i = 0; i < SIZE; i++) {
-        for (int j = 0; j < SIZE; j++) {
-            char ch;
-            fscanf(file, " %c", &ch);
-            grid[i][j] = (ch == EMPTY) ? 0 : ch - '0';
+    int puzzle_count = 0;
+    while (!feof(file)) {
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j < SIZE; j++) {
+                char ch;
+                fscanf(file, " %c", &ch);
+                puzzles[puzzle_count][i][j] = (ch == EMPTY) ? 0 : ch - '0';
+            }
         }
+        puzzle_count++;
+        fgetc(file); // Ignora linhas em branco
+        fgetc(file);
     }
     fclose(file);
+    return puzzle_count;
 }
 
-// Função para salvar o Sudoku resolvido no arquivo
-void save_sudoku(const char *filename, int grid[SIZE][SIZE]) {
+// Função para salvar múltiplos Sudokus no arquivo
+void save_multiple_sudokus(const char *filename, int puzzles[][SIZE][SIZE], int puzzle_count) {
     FILE *file = fopen(filename, "w");
     if (!file) {
         perror("Erro ao abrir arquivo de saída");
         exit(EXIT_FAILURE);
     }
-    for (int i = 0; i < SIZE; i++) {
-        for (int j = 0; j < SIZE; j++) {
-            if (grid[i][j] == 0) {
-                fprintf(file, "%c ", EMPTY);
-            } else {
-                fprintf(file, "%d ", grid[i][j]);
+    for (int p = 0; p < puzzle_count; p++) {
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j < SIZE; j++) {
+                if (puzzles[p][i][j] == 0) {
+                    fprintf(file, "%c ", EMPTY);
+                } else {
+                    fprintf(file, "%d ", puzzles[p][i][j]);
+                }
             }
+            fprintf(file, "\n");
         }
-        fprintf(file, "\n");
+        if (p < puzzle_count - 1) {
+            fprintf(file, "\n");
+        }
     }
     fclose(file);
 }
@@ -140,21 +171,34 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    int grid[SIZE][SIZE];
+    int puzzles[100][SIZE][SIZE];
     struct timeval start, end;
 
-    load_sudoku(input_file, grid);
+    int puzzle_count = load_multiple_sudokus(input_file, puzzles);
 
-    gettimeofday(&start, NULL);
-    if (!solve_sudoku_with_heuristic(grid)) {
-        fprintf(stderr, "Sem solução para o Sudoku fornecido.\n");
-        exit(EXIT_FAILURE);
+    for (int p = 0; p < puzzle_count; p++) {
+        printf("Resolvendo Sudoku #%d com heurística...\n", p + 1);
+
+        // Tentar resolver com heurística
+        gettimeofday(&start, NULL);
+        int solved = heuristic_solve(puzzles[p]);
+        gettimeofday(&end, NULL);
+
+        if (!solved) {
+            printf("Heurística falhou para Sudoku #%d, tentando backtracking...\n", p + 1);
+            gettimeofday(&start, NULL);
+            solved = backtracking_solve(puzzles[p]);
+            gettimeofday(&end, NULL);
+        }
+
+        if (!solved) {
+            fprintf(stderr, "Sem solução para o Sudoku #%d.\n", p + 1);
+        } else {
+            measure_time(&start, &end);
+        }
     }
-    gettimeofday(&end, NULL);
 
-    save_sudoku(output_file, grid);
-
-    measure_time(&start, &end);
+    save_multiple_sudokus(output_file, puzzles, puzzle_count);
 
     return 0;
 }

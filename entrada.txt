@@ -7,3 +7,14 @@ v 1 v v v v 5 v 9
 v v v v v v 4 3 v
 v v v 1 6 v v v 8
 7 v v v v 2 v v 1
+
+
+v v v v 8 v v v 5
+v v v 3 v v v 7 v
+v v 1 v v v v 9 v
+7 v v v 6 v v v v
+v 4 v 1 v 5 v 8 v
+v v v v 9 v v v 7
+v 6 v v v v 4 v v
+v 9 v v v 8 v v v
+8 v v v 2 v v v v
