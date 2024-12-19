@@ -4,17 +4,9 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include "sudoku.h"  // Incluir o cabeçalho
 
-#define SIZE 9
-#define EMPTY 'v'
-
-typedef struct {
-    int row;
-    int col;
-    int possibilities;
-} Cell;
-
-// Verificar se o número é válido
+// Função para verificar se o número é válido
 int is_valid(int grid[SIZE][SIZE], int row, int col, int num) {
     for (int x = 0; x < SIZE; x++) {
         if (grid[row][x] == num || grid[x][col] == num) return 0;

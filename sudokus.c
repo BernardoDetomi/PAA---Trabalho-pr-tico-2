@@ -1,3 +1,5 @@
+#include "sudoku.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,13 +11,6 @@
 #define EMPTY 'v'
 #define MAX_PATH_LENGTH 512
 
-typedef struct {
-    int row;
-    int col;
-    int possibilities;
-} Cell;
-
-// Verificar se o número é válido
 int is_valid(int grid[SIZE][SIZE], int row, int col, int num) {
     for (int x = 0; x < SIZE; x++) {
         if (grid[row][x] == num || grid[x][col] == num) return 0;
