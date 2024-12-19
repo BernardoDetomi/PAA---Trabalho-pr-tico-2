@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
 #include <sys/time.h>
-#include <sys/resource.h>
 
 // Função para verificar se o número é válido na célula
 int is_valid(int grid[SIZE][SIZE], int row, int col, int num) {
@@ -130,12 +130,18 @@ void save_multiple_sudokus(const char *filename, int puzzles[][SIZE][SIZE], int 
     fclose(file);
 }
 
-// Função para medir o tempo de execução
-void measure_time(struct timeval *start, struct timeval *end) {
+// Função para medir o tempo de CPU
+void measure_cpu_time(clock_t start, clock_t end) {
+    double elapsed = ((double)(end - start)) / CLOCKS_PER_SEC;
+    printf("Tempo de execução (CPU): %.6f segundos\n", elapsed);
+}
+
+// Função para medir o tempo de relógio
+void measure_wall_time(struct timeval *start, struct timeval *end) {
     long seconds = end->tv_sec - start->tv_sec;
     long microseconds = end->tv_usec - start->tv_usec;
     double elapsed = seconds + microseconds * 1e-6;
-    printf("Tempo de execução: %.6f segundos\n", elapsed);
+    printf("Tempo de execução (relógio): %.6f segundos\n", elapsed);
 }
 
 // Função principal
@@ -149,7 +155,8 @@ int main(int argc, char *argv[]) {
     char *output_file = argv[2];
 
     int puzzles[100][SIZE][SIZE];
-    struct timeval start, end;
+    clock_t cpu_start, cpu_end;
+    struct timeval wall_start, wall_end;
 
     // Carrega múltiplos Sudokus
     int puzzle_count = load_multiple_sudokus(input_file, puzzles);
@@ -158,21 +165,26 @@ int main(int argc, char *argv[]) {
         printf("Resolvendo Sudoku #%d com heurística...\n", p + 1);
 
         // Tentar resolver com heurística
-        gettimeofday(&start, NULL);
+        gettimeofday(&wall_start, NULL);
+        cpu_start = clock();
         int solved = heuristic_solve(puzzles[p]);
-        gettimeofday(&end, NULL);
+        cpu_end = clock();
+        gettimeofday(&wall_end, NULL);
 
         if (!solved) {
             printf("Heurística falhou para Sudoku #%d, tentando backtracking...\n", p + 1);
-            gettimeofday(&start, NULL);
+            gettimeofday(&wall_start, NULL);
+            cpu_start = clock();
             solved = backtracking_solve(puzzles[p]);
-            gettimeofday(&end, NULL);
+            cpu_end = clock();
+            gettimeofday(&wall_end, NULL);
         }
 
         if (!solved) {
             fprintf(stderr, "Sem solução para o Sudoku #%d.\n", p + 1);
         } else {
-            measure_time(&start, &end);
+            measure_cpu_time(cpu_start, cpu_end);
+            measure_wall_time(&wall_start, &wall_end);
         }
     }
 

@@ -6,10 +6,6 @@
 #include <unistd.h>
 #include <sys/time.h>
 
-#define SIZE 9
-#define EMPTY 'v'
-#define MAX_PUZZLES 100
-
 // Função para verificar se o número é válido na célula
 int is_valid(int grid[SIZE][SIZE], int row, int col, int num) {
     for (int x = 0; x < SIZE; x++) {

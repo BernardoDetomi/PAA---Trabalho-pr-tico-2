@@ -1,6 +1,7 @@
 #ifndef SUDOKU_SOLVER_H
 #define SUDOKU_SOLVER_H
 
+#include <time.h>
 #include <sys/time.h>
 
 #define SIZE 9
@@ -19,7 +20,7 @@ int heuristic_solve(int grid[SIZE][SIZE]);
 int backtracking_solve(int grid[SIZE][SIZE]);
 int load_multiple_sudokus(const char *filename, int puzzles[][SIZE][SIZE]);
 void save_multiple_sudokus(const char *filename, int puzzles[][SIZE][SIZE], int puzzle_count);
-void measure_time(struct timeval *start, struct timeval *end);
-
+void measure_cpu_time(clock_t start, clock_t end);
+void measure_wall_time(struct timeval *start, struct timeval *end);
 
 #endif

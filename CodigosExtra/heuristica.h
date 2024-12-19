@@ -3,7 +3,7 @@
 
 #include <sys/time.h>
 
-#define SIZE 9
+#define SIZE 15
 #define EMPTY 'v'
 
 typedef struct {

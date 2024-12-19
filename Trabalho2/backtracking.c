@@ -4,10 +4,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/time.h>
+#include <time.h>  // Incluindo time.h
 
-#define SIZE 9
-#define EMPTY 'v'
-#define MAX_PUZZLES 100
 
 // Função para verificar se o número é válido na célula
 int is_valid(int grid[SIZE][SIZE], int row, int col, int num) {
@@ -104,11 +102,14 @@ void save_sudokus(const char *filename, int puzzles[MAX_PUZZLES][SIZE][SIZE], in
 }
 
 // Função para medir o tempo de execução
-void measure_time(struct timeval *start, struct timeval *end) {
+void measure_time(struct timeval *start, struct timeval *end, clock_t cpu_start, clock_t cpu_end) {
     long seconds = end->tv_sec - start->tv_sec;
     long microseconds = end->tv_usec - start->tv_usec;
     double elapsed = seconds + microseconds * 1e-6;
-    printf("Tempo de execução: %.6f segundos\n", elapsed);
+    printf("Tempo de execução (relógio): %.6f segundos\n", elapsed);
+
+    double cpu_time = (double)(cpu_end - cpu_start) / CLOCKS_PER_SEC;
+    printf("Tempo de execução (CPU): %.6f segundos\n", cpu_time);
 }
 
 // Main
@@ -123,6 +124,7 @@ int main(int argc, char *argv[]) {
 
     int puzzles[MAX_PUZZLES][SIZE][SIZE];
     struct timeval start, end;
+    clock_t cpu_start, cpu_end;
 
     // Carrega múltiplos Sudokus
     int puzzle_count = load_sudokus(input_file, puzzles);
@@ -130,15 +132,19 @@ int main(int argc, char *argv[]) {
     for (int p = 0; p < puzzle_count; p++) {
         printf("Resolvendo Sudoku #%d...\n", p + 1);
 
-        // Medir tempo de resolução
+        // Medir tempo de execução de relógio
         gettimeofday(&start, NULL);
+        cpu_start = clock();
+
         if (!solve_sudoku(puzzles[p])) {
             fprintf(stderr, "Sem solução para o Sudoku #%d.\n", p + 1);
         }
+
+        cpu_end = clock();
         gettimeofday(&end, NULL);
 
         // Mostrar tempo
-        measure_time(&start, &end);
+        measure_time(&start, &end, cpu_start, cpu_end);
     }
 
     // Salvar os resultados
