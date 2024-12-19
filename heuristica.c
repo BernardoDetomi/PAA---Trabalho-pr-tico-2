@@ -1,18 +1,11 @@
+#include "heuristica.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/time.h>
 #include <sys/resource.h>
-
-#define SIZE 9
-#define EMPTY 'v'
-
-typedef struct {
-    int row;
-    int col;
-    int possibilities;
-} Cell;
 
 // Função para verificar se o número é válido na célula
 int is_valid(int grid[SIZE][SIZE], int row, int col, int num) {
@@ -146,7 +139,7 @@ void measure_time(struct timeval *start, struct timeval *end) {
     printf("Tempo de execução: %.6f segundos\n", elapsed);
 }
 
-// Main
+// Função principal
 int main(int argc, char *argv[]) {
     char *input_file = NULL;
     char *output_file = NULL;
