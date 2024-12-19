@@ -113,28 +113,13 @@ void measure_time(struct timeval *start, struct timeval *end) {
 
 // Main
 int main(int argc, char *argv[]) {
-    char *input_file = NULL;
-    char *output_file = NULL;
-    int opt;
-
-    while ((opt = getopt(argc, argv, "i:o:")) != -1) {
-        switch (opt) {
-            case 'i':
-                input_file = optarg;
-                break;
-            case 'o':
-                output_file = optarg;
-                break;
-            default:
-                fprintf(stderr, "Uso: %s -i <arquivo_entrada> -o <arquivo_saida>\n", argv[0]);
-                exit(EXIT_FAILURE);
-        }
-    }
-
-    if (!input_file || !output_file) {
-        fprintf(stderr, "Arquivos de entrada e saída são obrigatórios.\n");
+    if (argc != 3) {
+        fprintf(stderr, "Uso: %s <arquivo_entrada> <arquivo_saida>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
+
+    char *input_file = argv[1];
+    char *output_file = argv[2];
 
     int puzzles[MAX_PUZZLES][SIZE][SIZE];
     struct timeval start, end;
